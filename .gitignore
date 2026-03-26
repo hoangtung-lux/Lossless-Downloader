@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# PyInstaller & Build
+build/
+dist/
+*.spec
+
+# Binaries (Công cụ đi kèm - Có thể chọn upload hoặc dùng script tải)
+bin/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
