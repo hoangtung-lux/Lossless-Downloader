@@ -10,9 +10,6 @@ build/
 dist/
 *.spec
 
-# Binaries (Công cụ đi kèm - Có thể chọn upload hoặc dùng script tải)
-# Nếu muốn repo gọn, nên ignore thư mục bin/ và cung cấp link tải riêng
-# Nhưng nếu muốn "mì ăn liền", có thể comment dòng dưới để upload luôn bin/
 # bin/
 
 # OS
