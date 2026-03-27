@@ -12,44 +12,28 @@
 
 - 🚀 **Smart Routing (Điều hướng thông minh):**
   - **Hi-Fi thật:** Tự động điều hướng link **Tidal, Qobuz, Deezer** qua engine `streamrip` để lấy file FLAC gốc.
-  - **ISRC Matching:** Công nghệ ISRC từ bản Android giúp tìm nhạc Spotify trên các nguồn lossless chính xác 100%.
+  - **ISRC Matching:** Công nghệ ánh xạ mã ISRC từ Spotify giúp tìm đúng bản nhạc Lossless trên Deezer/Tidal chính xác 100%.
   - **YouTube Music:** Hỗ trợ tải chất lượng cao từ YouTube qua `yt-dlp` ổn định.
+- 🎼 **Đa dạng Định dạng**: Hỗ trợ xuất file FLAC, MP3 (320kbps), M4A, OPUS.
 - 🔍 **Search-to-Download:** Tìm kiếm trực tiếp bằng tên bài hát/ca sĩ ngay trong app, không cần dán link.
-- ⚡ **Siêu tốc độ:** Tích hợp `aria2c` với cấu hình 16 luồng tải song song.
-- 🎨 **Giao diện hiện đại:** Thiết kế Dark Mode phong cách Spotify, hiệu ứng Gradient và Pulse animation mượt mà.
+- ⚡ **Siêu tốc độ:** Tích hợp `aria2c` với cấu hình 16 luồng tải song song cực nhanh.
+- 🛡️ **SponsorBlock**: Tự động dọn dẹp các đoạn quảng cáo, intro, outro rườm rà từ YouTube (Tính năng từ YTDLnis).
+- 🎨 **Giao diện Prism**: Phong cách Tím-Cyan hiện đại với hiệu ứng Blur, Gradient và Pulse animation sang trọng.
 - 📦 **Mì ăn liền:** Đã được đóng gói thành file `.exe` duy nhất, không cần cài đặt Python.
-- 🖼️ **Full Metadata:** Tự động nhúng Cover Art, Album và Lời bài hát vào file nhạc.
-
-# 🌈 Lumina Music - Premium Lossless Downloader
-
-> **Slogan:** Khám phá âm nhạc chất lượng cao với phong cách Prism hiện đại.
-
-Lumina Music là phiên bản nâng cấp toàn diện từ bộ mã nguồn gốc Android, được tinh giản và tối ưu hóa cho Desktop với các công nghệ tải nhạc tiên tiến nhất hiện nay.
-
-## ✨ Tính năng nổi bật (Siêu Mix)
-
-- **🎼 Đa dạng Định dạng**: Hỗ trợ xuất file FLAC, MP3 (320kbps), M4A, OPUS.
-- **🚀 Siêu tốc độ**: Tích hợp Aria2c (16 luồng song song) giúp tải nhạc cực nhanh.
-- **🛡️ SponsorBlock**: Tự động dọn dẹp các đoạn quảng cáo, intro, outro rườm rà từ YouTube.
-- **🔍 ISRC Matching**: Công nghệ ánh xạ mã ISRC từ Spotify giúp tìm đúng bản nhạc Lossless trên Deezer/Tidal.
-- **🌐 Metadata VN**: Tự động nhận diện và ưu tiên tên bài hát Tiếng Việt chuẩn.
-- **💎 Giao diện Prism**: Phong cách Tím-Cyan hiện đại với hiệu ứng Blur nhẹ nhàng, sang trọng.
+- 🖼️ **Full Metadata**: Tự động nhúng Cover Art, Album, Lời bài hát và ISRC vào file nhạc.
 
 ## 🚀 Cách sử dụng (A-Z)
 
 Cực kỳ đơn giản cho người dùng không muốn cài đặt phức tạp:
 
 1. **Tải về**: Giải nén bộ mã nguồn.
-2. **Khởi chạy**: Nhấp đúp vào tệp **`Install_and_Run.bat`**.
+2. **Khởi chạy**: Nhấp đúp vào tệp **`Install_and_Run.bat`** (Windows) hoặc chạy **`install_and_run.sh`** (Linux/macOS).
 3. **Thưởng thức**: Dán link nhạc hoặc nhập tên bài hát và nhấn **Tải xuống**.
 
 ## 🛠️ Yêu cầu hệ thống
-- **Hệ điều hành**: Windows 10/11 (64-bit).
-- **Phụ thuộc**: Python 3.10+ (Đã tích hợp cài đặt tự động qua .bat).
-- **Công cụ**: FFmpeg (Cần có trong PATH để sử dụng SponsorBlock).
-
----
-*Phát triển bởi Antigravity với tình yêu dành cho âm nhạc.*
+- **Hệ điều hành**: Windows 10/11, Linux, macOS.
+- **Phiên bản**: Python 3.10+ (Windows có script cài đặt tự động).
+- **Công cụ**: FFmpeg (Cần có để xử lý metadata và SponsorBlock).
 
 ## 💻 Cấu Trúc Dự Án
 
@@ -63,9 +47,13 @@ Cực kỳ đơn giản cho người dùng không muốn cài đặt phức tạ
 
 ---
 
-## 📜 Miễn Trừ Trách Nhiệm
+## 📜 Miễn Trừ Trách Nhiệm (Legal Notice)
 
-Dự án này được tạo ra cho mục đích học tập và nghiên cứu cá nhân. Vui lòng tôn trọng quyền tác giả và quy định của các nền tảng phát nhạc trực tuyến. Chúng tôi không chịu trách nhiệm về bất kỳ hành vi sử dụng sai mục đích nào.
+**Dự án này được tạo ra cho mục đích giáo dục và nghiên cứu cá nhân (Educational Purposes Only).**
+
+1. **Quyền sở hữu**: Tác giả không sở hữu và không chịu trách nhiệm về nội dung âm nhạc bạn tải xuống. Vui lòng hỗ trợ nghệ sĩ bằng cách mua nhạc hoặc đăng ký các dịch vụ streaming bản quyền.
+2. **Điều khoản dịch vụ**: Việc tải nhạc từ các nền tảng như Tidal, Qobuz, Deezer, Spotify có thể vi phạm Điều khoản dịch vụ (ToS) của họ. Người dùng tự chịu mọi trách nhiệm pháp lý nếu sử dụng công cụ này vào mục đích thương mại hoặc vi phạm bản quyền.
+3. **Mã nguồn**: Đây là dự án nguồn mở bản quyền MIT. Tác giả không cung cấp bất kỳ đảm bảo nào về tính ổn định hoặc tính hợp pháp của việc bypass DRM (nếu có) trên máy của bạn.
 
 ---
 
