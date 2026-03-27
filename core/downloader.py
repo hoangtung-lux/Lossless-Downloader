@@ -9,7 +9,6 @@ import re
 import subprocess
 import urllib.request
 import yt_dlp
-import streamrip # Đảm bảo PyInstaller bundle thư viện này
 from PySide6.QtCore import QThread, Signal
 
 # Map domain → streamrip source ID
