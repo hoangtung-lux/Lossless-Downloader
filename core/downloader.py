@@ -63,15 +63,24 @@ class DownloaderThread(QThread):
         aria_exe = os.path.join(self.bin_dir, 'aria2c.exe')
         outtmpl = os.path.join(self.output_dir, '%(title)s.%(ext)s')
 
+        # Khi chạy file .exe (frozen), việc gọi aria2c qua subprocess
+        # có thể block UI thread hoặc gây freeze. Dùng downloader nội bộ của yt-dlp.
+        is_frozen = getattr(sys, 'frozen', False)
+        use_aria2c = (not is_frozen) and os.path.exists(aria_exe)
+
         ydl_opts = {
             'format': 'bestaudio/best',
             'outtmpl': outtmpl,
             'progress_hooks': [self.my_hook],
             'ffmpeg_location': ffmpeg_exe if os.path.exists(ffmpeg_exe) else None,
-            'external_downloader': aria_exe if os.path.exists(aria_exe) else 'aria2c',
-            'external_downloader_args': {
-                'aria2c': ['-c', '-j', '16', '-x', '16', '-s', '16', '-k', '1M'],
-            },
+            # Chỉ dùng aria2c khi chạy từ source, không phải .exe
+            **({
+                'external_downloader': aria_exe,
+                'external_downloader_args': {
+                    'aria2c': ['-c', '-j', '16', '-x', '16', '-s', '16', '-k', '1M'],
+                },
+            } if use_aria2c else {}),
+            'concurrent_fragment_downloads': 8,  # Thay thế aria2c khi chạy .exe
             'writethumbnail': True,
             'write_description': False,
             'write_annotations': False,
@@ -133,7 +142,7 @@ class DownloaderThread(QThread):
                     search_term = full_title.split('|')[0].replace('- song and lyrics by', '').strip()
                 else:
                     raise ValueError("Không lấy được tên bài từ Spotify")
-            return f"ytmsearch1:{search_term}"
+            return f"ytsearch1:{search_term}"
         except Exception as e:
             self.error_signal.emit(f"Lỗi Spotify: {str(e)}")
             return None

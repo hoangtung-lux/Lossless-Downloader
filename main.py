@@ -1,5 +1,11 @@
 import sys
 import os
+import multiprocessing
+
+# QUAN TRỌNG: Phải gọi trước khi làm bất kỳ việc gì khác.
+# Ngăn PyInstaller trên Windows spawn vô hạn khi chạy file .exe.
+if __name__ == "__main__":
+    multiprocessing.freeze_support()
 
 # Cấu hình lại biến môi trường PATH đầu tiên để yt-dlp nhận được Deno/FFmpeg.
 if getattr(sys, 'frozen', False):
