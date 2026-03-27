@@ -4,10 +4,12 @@ from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLineEdit, QPushButton, QLabel, QTableWidget,
     QTableWidgetItem, QHeaderView, QProgressBar,
-    QGraphicsDropShadowEffect, QFrame, QSizePolicy, QFileDialog
+    QGraphicsDropShadowEffect, QFrame, QSizePolicy, QFileDialog,
+    QMessageBox
 )
 from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QSize, QTimer
 from PySide6.QtGui import QFont, QColor, QPalette, QLinearGradient, QPainter, QBrush, QPen, QIcon
+from core.downloader import DownloaderThread
 
 
 class GradientHeader(QWidget):
@@ -391,7 +393,7 @@ class MainWindow(QMainWindow):
             url = raw_input
             search_display = "⏳ Đang lấy thông tin..."
 
-        from core.downloader import DownloaderThread
+        # (DownloaderThread đã được import ở top-level)
 
         row = self.table.rowCount()
         self.table.insertRow(row)
@@ -412,15 +414,20 @@ class MainWindow(QMainWindow):
         output_dir = self.output_dir
         os.makedirs(output_dir, exist_ok=True)
 
-        thread = DownloaderThread(url, output_dir, cookie_file=self.cookie_file)
-        thread.row_index = row
-        thread.progress_signal.connect(self.update_progress)
-        thread.finished_signal.connect(self.download_finished)
-        thread.error_signal.connect(self.download_error)
-        thread.finished.connect(lambda: self._cleanup_thread(thread))
+        try:
+            thread = DownloaderThread(url, output_dir, cookie_file=self.cookie_file)
+            thread.row_index = row
+            thread.progress_signal.connect(self.update_progress)
+            thread.finished_signal.connect(self.download_finished)
+            thread.error_signal.connect(self.download_error)
+            thread.finished.connect(lambda: self._cleanup_thread(thread))
+            self.threads.append(thread)
+            thread.start()
+        except Exception as e:
+            QMessageBox.critical(self, "Lỗi khởi tạo", f"Không thể bắt đầu tải:\n{str(e)}")
+            self.table.removeRow(row)
+            return
 
-        self.threads.append(thread)
-        thread.start()
         self.url_input.clear()
 
         self._stats["total"] += 1
