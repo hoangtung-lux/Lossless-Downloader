@@ -1,9 +1,9 @@
 # Hướng dẫn Upload Source Code lên GitHub 🚀
 
-Để chia sẻ dự án **SpotiFLAC-Clone** của bác lên GitHub một cách chuyên nghiệp nhất, bác hãy làm theo các bước sau nhé:
+Để chia sẻ dự án **Lumina Music-Downloader** của bác lên GitHub một cách chuyên nghiệp nhất, bác hãy làm theo các bước sau nhé:
 
 ## Bước 1: Chuẩn bị Repository
-1. Truy cập [github.com](https://github.com/) và tạo một Repository mới (ví dụ tên là `SpotiFLAC-Clone`).
+1. Truy cập [github.com](https://github.com/) và tạo một Repository mới (ví dụ tên là `Lumina Music-Downloader`).
 2. Đừng tích chọn "Initialize this repository with a README" (vì mình đã có code sẵn rồi).
 
 ## Bước 2: Chạy lệnh Git tại thư mục dự án
@@ -17,7 +17,7 @@ git init
 git add .
 
 # 3. Tạo bản lưu đầu tiên
-git commit -m "Initial commit - SpotiFLAC Clone"
+git commit -m "Initial commit - Lumina Music Downloader"
 
 # 4. Đổi tên nhánh chính thành main
 git branch -M main

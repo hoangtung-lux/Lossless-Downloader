@@ -1,12 +1,12 @@
 <template>
-  <div class="spotiflac-showcase min-h-screen bg-[#121212] text-white font-sans selection:bg-[#1DB954] selection:text-black">
+  <div class="Lumina Music-showcase min-h-screen bg-[#121212] text-white font-sans selection:bg-[#1DB954] selection:text-black">
     <!-- Navigation -->
     <nav class="sticky top-0 z-50 bg-[#000000]/80 backdrop-blur-md border-b border-[#282828] p-4 flex justify-between items-center px-6 md:px-12">
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 bg-[#1DB954] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(29,185,84,0.5)]">
           <svg viewBox="0 0 24 24" class="w-5 h-5 fill-black" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
         </div>
-        <span class="font-bold text-xl tracking-tight hidden sm:block">SpotiFLAC Clone</span>
+        <span class="font-bold text-xl tracking-tight hidden sm:block">Lumina Music Clone</span>
       </div>
       <a href="/" class="text-[#b3b3b3] hover:text-white transition-colors flex items-center gap-2 text-sm font-medium">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -42,7 +42,7 @@
       <div class="lg:w-1/2 mt-12 lg:mt-0 relative group">
         <div class="absolute -inset-4 bg-[#1DB954]/20 rounded-2xl blur-2xl group-hover:bg-[#1DB954]/30 transition-all duration-500"></div>
         <img src="https://raw.githubusercontent.com/hoangtung-lux/Lossless-Downloader/main/icon.jpg" 
-             alt="SpotiFLAC Banner" 
+             alt="Lumina Music Banner" 
              class="relative rounded-2xl border border-[#282828] shadow-2xl transform group-hover:rotate-1 group-hover:scale-[1.02] transition-all duration-500 w-full object-cover aspect-square md:aspect-video"/>
       </div>
     </section>

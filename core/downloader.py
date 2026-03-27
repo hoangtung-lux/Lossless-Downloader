@@ -8,8 +8,13 @@ import sys
 import re
 import subprocess
 import urllib.request
+import ssl
 import yt_dlp
 from PySide6.QtCore import QThread, Signal
+from core.resolver import resolver
+
+# Bỏ qua kiểm tra SSL cho urllib (Khắc phục lỗi trên một số máy Windows)
+ssl._create_default_https_context = ssl._create_unverified_context
 
 # Map domain → streamrip source ID
 STREAMRIP_SOURCES = {
@@ -33,11 +38,12 @@ class DownloaderThread(QThread):
     finished_signal = Signal(str, str)
     error_signal = Signal(str)
 
-    def __init__(self, url: str, output_dir: str, cookie_file: str = ""):
+    def __init__(self, url: str, output_dir: str, cookie_file: str = "", codec: str = "flac"):
         super().__init__()
         self.url = url
         self.output_dir = output_dir
         self.cookie_file = cookie_file  # Netscape cookie file hoặc config.toml
+        self.codec = codec.lower()
         self.is_cancelled = False
 
     def run(self):
@@ -49,10 +55,25 @@ class DownloaderThread(QThread):
         
         self.bin_dir = os.path.join(base_dir, 'bin')
         
-        source = detect_source(self.url)
+        current_url = self.url
+        # Nếu là Spotify, thử tìm link lossless trước
+        if 'spotify.com' in current_url:
+            resolved = self._resolve_spotify(current_url)
+            if resolved:
+                if resolved.startswith('http'):
+                    current_url = resolved
+                    print(f"[Resolver] Chuyển hướng sang: {current_url}")
+                else:
+                    # Là ytsearch1:... thì vẫn dùng ytdlp
+                    self.url = resolved
+        
+        source = detect_source(current_url)
         if source == 'ytdlp':
+            # Nếu đã resolve ra ytsearch thì _run_ytdlp sẽ dùng self.url
             self._run_ytdlp()
         else:
+            # Nếu resolve ra link Deezer/Tidal/v.v. thì dùng streamrip
+            self.url = current_url
             self._run_streamrip(source)
 
     # ─── yt-dlp branch ─────────────────────────────────────────────────────
@@ -76,7 +97,7 @@ class DownloaderThread(QThread):
             **({
                 'external_downloader': aria_exe,
                 'external_downloader_args': {
-                    'aria2c': ['-c', '-j', '16', '-x', '16', '-s', '16', '-k', '1M'],
+                    'aria2c': ['-c', '-j', '16', '-x', '16', '-s', '16', '-k', '1M', '--file-allocation=none', '--summary-interval=0'],
                 },
             } if use_aria2c else {}),
             'concurrent_fragment_downloads': 8,  # Thay thế aria2c khi chạy .exe
@@ -88,10 +109,16 @@ class DownloaderThread(QThread):
             'noprogress': True,
             'quiet': True,
             'postprocessors': [
-                {'key': 'FFmpegExtractAudio', 'preferredcodec': 'flac'},
+                # 1. Tách Audio
+                {'key': 'FFmpegExtractAudio', 'preferredcodec': self.codec, 'preferredquality': '320' if self.codec == 'mp3' else None},
+                # 2. SponsorBlock (Tính năng từ YTDLnis): Tự động xóa sponsor, intro, outro
+                {'key': 'SponsorBlock'},
+                # 3. Metadata nâng cao
                 {'key': 'FFmpegMetadata', 'add_metadata': True},
                 {'key': 'EmbedThumbnail', 'already_have_thumbnail': False},
             ],
+            # Cấu hình SponsorBlock chi tiết: xóa hết các đoạn không phải âm nhạc
+            'sponsorblock_remove': ['sponsor', 'intro', 'outro', 'selfpromo', 'preview', 'filler'],
         }
 
         if self.cookie_file and os.path.exists(self.cookie_file):
@@ -101,10 +128,7 @@ class DownloaderThread(QThread):
             self._emit_status('fetching_metadata', 'Đang kết nối...')
 
             url = self.url
-            if 'spotify.com' in url:
-                url = self._resolve_spotify(url)
-                if url is None:
-                    return
+            # (Spotify đã được xử lý ở run() nếu là link Spotify)
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=True)
@@ -113,7 +137,8 @@ class DownloaderThread(QThread):
                 title = info.get('title', 'Unknown Title')
                 filepath = ydl.prepare_filename(info)
                 base, _ = os.path.splitext(filepath)
-                final_path = f"{base}.flac"
+                # Đảm bảo signal trả về đúng extension đã chọn
+                final_path = f"{base}.{self.codec}"
                 if not os.path.exists(final_path):
                     final_path = filepath
                 self.finished_signal.emit(title, final_path)
@@ -122,28 +147,51 @@ class DownloaderThread(QThread):
                 self.error_signal.emit(str(e))
 
     def _resolve_spotify(self, url: str):
-        self._emit_status('fetching_metadata', 'Parsing Spotify...')
+        self._emit_status('fetching_metadata', 'Lumina Resolver đang xử lý...')
         try:
+            # 1. Trích xuất Spotify ID
+            track_id_match = re.search(r'track/([a-zA-Z0-9]+)', url)
+            if not track_id_match:
+                return f"ytsearch1:{url}"
+            
+            track_id = track_id_match.group(1)
+            
+            # 2. Thử Songlink để lấy link Deezer/Tidal (Nhanh nhất)
+            mapping = resolver.resolve_via_songlink(url)
+            for plat in ['deezer', 'tidal', 'qobuz']:
+                if plat in mapping:
+                    print(f"[Resolver] Tìm thấy link {plat} qua Songlink")
+                    return mapping[plat]
+
+            # 3. Lấy ISRC và tìm trên Deezer (Chính xác nhất nếu Songlink tịt)
+            isrc = resolver.get_track_isrc(track_id)
+            if isrc:
+                deezer_url = resolver.find_on_deezer_by_isrc(isrc)
+                if deezer_url:
+                    print(f"[Resolver] Tìm thấy qua ISRC ({isrc}) trên Deezer")
+                    return deezer_url
+
+            # 4. Fallback: Lấy metadata để search YouTube (Nếu các cách trên thất bại)
+            # Dùng lại logic scraping cũ hoặc gọi Spotify API lấy Title/Artist
             req = urllib.request.Request(
                 url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
             )
-            html = urllib.request.urlopen(req, timeout=10).read().decode('utf-8')
-            og_match = re.search(r'<meta\s+property="og:title"\s+content="([^"]+)"', html)
-            artist_match = re.search(r'<meta\s+property="og:description"\s+content="([^"]+)"', html)
+            html_data = urllib.request.urlopen(req, timeout=10).read().decode('utf-8')
+            og_match = re.search(r'<meta\s+property="og:title"\s+content="([^"]+)"', html_data)
+            artist_match = re.search(r'<meta\s+property="og:description"\s+content="([^"]+)"', html_data)
+            
             if og_match:
                 song = og_match.group(1).strip()
                 artist = artist_match.group(1).split('·')[0].strip() if artist_match else ''
                 search_term = f"{song} {artist}".strip()
             else:
-                title_match = re.search(r'<title>(.*?)</title>', html, re.IGNORECASE)
-                if title_match:
-                    full_title = title_match.group(1)
-                    search_term = full_title.split('|')[0].replace('- song and lyrics by', '').strip()
-                else:
-                    raise ValueError("Không lấy được tên bài từ Spotify")
-            return f"ytsearch1:{search_term}"
+                search_term = url # Cùng lắm thì để yt-dlp tự xử lý
+            
+            normalized = resolver.normalize_title(search_term)
+            return f"ytsearch1:{normalized}"
+            
         except Exception as e:
-            self.error_signal.emit(f"Lỗi Spotify: {str(e)}")
+            print(f"[Resolver] Error: {e}")
             return None
 
     # ─── streamrip branch ──────────────────────────────────────────────────
@@ -159,9 +207,19 @@ class DownloaderThread(QThread):
                 if not os.path.exists(rip_exe):
                     rip_exe = 'rip'
 
+            # Ánh xạ codec cho streamrip
+            rip_codec_map = {
+                'flac': 'flac',
+                'mp3': 'mp3',
+                'm4a': 'aac',
+                'opus': 'ogg'
+            }
+            rip_codec = rip_codec_map.get(self.codec, 'flac')
+
             cmd = [
                 rip_exe, 'url', self.url,
                 '--directory', self.output_dir,
+                '--codec', rip_codec,
             ]
             if self.cookie_file and os.path.exists(self.cookie_file):
                 cmd += ['--config-path', self.cookie_file]

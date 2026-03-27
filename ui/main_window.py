@@ -3,8 +3,8 @@ import sys
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLineEdit, QPushButton, QLabel, QTableWidget,
-    QTableWidgetItem, QHeaderView, QProgressBar,
-    QGraphicsDropShadowEffect, QFrame, QSizePolicy, QFileDialog,
+    QTableWidgetItem, QHeaderView, QAbstractItemView, QFrame, QComboBox,
+    QProgressBar, QGraphicsDropShadowEffect, QSizePolicy, QFileDialog,
     QMessageBox
 )
 from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QSize, QTimer
@@ -22,9 +22,13 @@ class GradientHeader(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         gradient = QLinearGradient(0, 0, self.width(), self.height())
-        gradient.setColorAt(0.0, QColor("#0d6e3b"))
-        gradient.setColorAt(0.5, QColor("#1DB954"))
+        gradient.setColorAt(0.0, QColor("#1a1040"))
+        gradient.setColorAt(0.5, QColor("#1a1040"))
         gradient.setColorAt(1.0, QColor("#1a1040"))
+        # Gradient mới: Tím đậm sang Cyan nhẹ
+        gradient = QLinearGradient(0, 0, self.width(), self.height())
+        gradient.setColorAt(0.0, QColor("#3700B3"))
+        gradient.setColorAt(1.0, QColor("#03DAC6"))
         painter.fillRect(self.rect(), QBrush(gradient))
 
 
@@ -35,8 +39,8 @@ class PulseButton(QPushButton):
         self.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #1DB954, stop:1 #17a349);
-                color: white;
+                    stop:0 #BB86FC, stop:1 #9965f4);
+                color: black;
                 border-radius: 22px;
                 padding: 11px 28px;
                 font-weight: bold;
@@ -45,17 +49,17 @@ class PulseButton(QPushButton):
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #1ed760, stop:1 #1DB954);
+                    stop:0 #D7B4FF, stop:1 #BB86FC);
             }
             QPushButton:pressed {
-                background: #158a3e;
+                background: #7c4dff;
             }
         """)
-        # Drop shadow glow xanh nhẹ
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(20)
-        shadow.setColor(QColor("#1DB954"))
-        shadow.setOffset(0, 3)
+        # Hiệu ứng Shadow nhẹ nhàng (theo yêu cầu người dùng)
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(12)
+        shadow.setColor(QColor(0, 0, 0, 160))
+        shadow.setOffset(0, 4)
         self.setGraphicsEffect(shadow)
 
 
@@ -76,11 +80,11 @@ class StatCard(QFrame):
         layout.setSpacing(2)
 
         self.value_label = QLabel(value)
-        self.value_label.setStyleSheet("color: #1DB954; font-size: 22px; font-weight: bold;")
+        self.value_label.setStyleSheet("color: #03DAC6; font-size: 22px; font-weight: bold;")
         self.value_label.setAlignment(Qt.AlignCenter)
 
         self.text_label = QLabel(label)
-        self.text_label.setStyleSheet("color: #888; font-size: 11px;")
+        self.text_label.setStyleSheet("color: #aaa; font-size: 11px;")
         self.text_label.setAlignment(Qt.AlignCenter)
 
         layout.addWidget(self.value_label)
@@ -93,22 +97,25 @@ class StatCard(QFrame):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("SpotiFLAC — Lossless Downloader")
+        self.setWindowTitle("Lumina Music — Lossless Downloader")
         self.setMinimumSize(960, 620)
         self.resize(1040, 680)
         self._stats = {"total": 0, "done": 0, "error": 0}
         self.threads: list = []
         self.cookie_file: str = ""  # Path tới Netscape cookie file
 
-        # Load Icon
+        # Load Icon (Prism)
         if getattr(sys, 'frozen', False):
-            icon_path = os.path.join(sys._MEIPASS, "icon.ico")
+            icon_path = os.path.join(sys._MEIPASS, "assets", "app_icon.ico")
         else:
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            icon_path = os.path.join(base_dir, "icon.ico")
+            icon_path = os.path.join(base_dir, "assets", "app_icon.ico")
         
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
+        else:
+            # Fallback nếu chưa có assets
+            self.setWindowIcon(QIcon.fromTheme("audio-x-generic"))
 
         self._build_ui()
 
@@ -145,9 +152,9 @@ class MainWindow(QMainWindow):
         top_row = QHBoxLayout()
         icon_label = QLabel("♫")
         icon_label.setStyleSheet("color: white; font-size: 28px;")
-        app_name = QLabel("SpotiFLAC")
+        app_name = QLabel("Lumina Music")
         app_name.setStyleSheet("color: white; font-size: 26px; font-weight: bold; letter-spacing: 1px;")
-        tagline = QLabel("Lossless Downloader")
+        tagline = QLabel("Premium Lossless Downloader")
         tagline.setStyleSheet("color: rgba(255,255,255,0.65); font-size: 12px; margin-top: 6px;")
 
         top_row.addWidget(icon_label)
@@ -158,11 +165,11 @@ class MainWindow(QMainWindow):
         top_row.addStretch()
 
         # Mini badges
-        for badge_text in ["FLAC", "Aria2c ×16", "FFmpeg"]:
+        for badge_text in ["FLAC", "ISRC Match", "Odesli"]:
             badge = QLabel(badge_text)
             badge.setStyleSheet("""
-                color: #1DB954;
-                border: 1px solid #1DB954;
+                color: #03DAC6;
+                border: 1px solid #03DAC6;
                 border-radius: 8px;
                 padding: 2px 8px;
                 font-size: 11px;
@@ -183,16 +190,16 @@ class MainWindow(QMainWindow):
         self.url_input.returnPressed.connect(self.start_download)
         self.url_input.setStyleSheet("""
             QLineEdit {
-                background-color: rgba(255,255,255,0.12);
-                border: 1.5px solid rgba(255,255,255,0.2);
+                background-color: rgba(255,255,255,0.08);
+                border: 1.5px solid rgba(255,255,255,0.1);
                 color: white;
                 border-radius: 22px;
                 padding: 0 18px;
                 font-size: 14px;
             }
             QLineEdit:focus {
-                border: 1.5px solid #1DB954;
-                background-color: rgba(255,255,255,0.18);
+                border: 1px solid #03DAC6;
+                background-color: rgba(255,255,255,0.08);
             }
         """)
 
@@ -200,7 +207,30 @@ class MainWindow(QMainWindow):
         self.download_btn.setFixedHeight(44)
         self.download_btn.clicked.connect(self.start_download)
 
+        # Dropdown chọn định dạng (Tính năng từ YTDLnis)
+        self.codec_combo = QComboBox()
+        self.codec_combo.addItems(["FLAC", "MP3", "M4A", "OPUS"])
+        self.codec_combo.setFixedWidth(80)
+        self.codec_combo.setFixedHeight(44)
+        self.codec_combo.setStyleSheet("""
+            QComboBox {
+                background-color: rgba(40, 40, 40, 0.4);
+                border: 1px solid rgba(187, 134, 252, 0.2);
+                border-radius: 12px;
+                color: #03DAC6;
+                padding-left: 10px;
+                font-weight: bold;
+            }
+            QComboBox::drop-down { border: none; }
+            QComboBox QAbstractItemView {
+                background-color: #1e1e1e;
+                color: white;
+                selection-background-color: #333;
+            }
+        """)
+
         input_row.addWidget(self.url_input)
+        input_row.addWidget(self.codec_combo)
         input_row.addWidget(self.download_btn)
         header_layout.addLayout(input_row)
 
@@ -279,8 +309,8 @@ class MainWindow(QMainWindow):
         root_layout.addWidget(sep)
 
         # ─── Table ─────────────────────────────────────────────────────
-        self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["  Bài hát", "Trạng thái", "Tiến độ", "Tốc độ", "ETA"])
+        self.table = QTableWidget(0, 6)
+        self.table.setHorizontalHeaderLabels(["Nguồn", "  Bài hát", "Trạng thái", "Tiến độ", "Tốc độ", "ETA"])
         self.table.setStyleSheet("""
             QTableWidget {
                 background-color: #121212;
@@ -294,7 +324,7 @@ class MainWindow(QMainWindow):
                 border-bottom: 1px solid #1e1e1e;
             }
             QTableWidget::item:selected {
-                background-color: #1a2e1a;
+                background-color: #2d1a4d;
                 color: white;
             }
             QHeaderView::section {
@@ -318,16 +348,17 @@ class MainWindow(QMainWindow):
             }
             QProgressBar::chunk {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #1DB954, stop:1 #17a349);
+                    stop:0 #BB86FC, stop:1 #03DAC6);
                 border-radius: 4px;
             }
         """)
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Fixed)
-        self.table.setColumnWidth(2, 160)
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.Fixed)
+        self.table.setColumnWidth(3, 160)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeToContents)
         self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
@@ -342,7 +373,7 @@ class MainWindow(QMainWindow):
         footer.setStyleSheet("background-color: #0d0d0d;")
         footer_layout = QHBoxLayout(footer)
         footer_layout.setContentsMargins(20, 0, 20, 0)
-        footer_lbl = QLabel("SpotiFLAC Clone  •  yt-dlp + FFmpeg + Aria2c (16 threads)  •  FLAC Lossless")
+        footer_lbl = QLabel("Lumina Music Downloader  •  yt-dlp + FFmpeg + Aria2c (16 threads)  •  FLAC Lossless")
         footer_lbl.setStyleSheet("color: #444; font-size: 11px;")
         footer_layout.addWidget(footer_lbl)
         footer_layout.addStretch()
@@ -365,7 +396,7 @@ class MainWindow(QMainWindow):
         if folder:
             self.output_dir = folder
             self.status_label.setText(f"💾  {folder}")
-            self.status_label.setStyleSheet("color: #1DB954; font-size: 12px;")
+            self.status_label.setStyleSheet("color: #03DAC6; font-size: 12px;")
 
     def _pick_cookie(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -399,23 +430,35 @@ class MainWindow(QMainWindow):
         self.table.insertRow(row)
         self.table.setRowHeight(row, 52)
 
-        self.table.setItem(row, 0, QTableWidgetItem(search_display))
+        # Cột 0: Nguồn âm nhạc
+        source_label = "YouTube"
+        if "spotify.com" in url: source_label = "Spotify"
+        elif "tidal.com" in url: source_label = "Tidal"
+        elif "deezer.com" in url: source_label = "Deezer"
+        
+        source_item = QTableWidgetItem(source_label)
+        source_item.setTextAlignment(Qt.AlignCenter)
+        source_item.setForeground(QColor("#03DAC6"))
+        self.table.setItem(row, 0, source_item)
+
+        self.table.setItem(row, 1, QTableWidgetItem(search_display))
         status_item = QTableWidgetItem("Khởi tạo")
         status_item.setForeground(QColor("#888"))
-        self.table.setItem(row, 1, status_item)
+        self.table.setItem(row, 2, status_item)
 
         progress_bar = QProgressBar()
         progress_bar.setValue(0)
         progress_bar.setTextVisible(False)
-        self.table.setCellWidget(row, 2, progress_bar)
-        self.table.setItem(row, 3, QTableWidgetItem("—"))
+        self.table.setCellWidget(row, 3, progress_bar)
         self.table.setItem(row, 4, QTableWidgetItem("—"))
+        self.table.setItem(row, 5, QTableWidgetItem("—"))
 
         output_dir = self.output_dir
         os.makedirs(output_dir, exist_ok=True)
 
         try:
-            thread = DownloaderThread(url, output_dir, cookie_file=self.cookie_file)
+            codec = self.codec_combo.currentText().lower()
+            thread = DownloaderThread(url, output_dir, cookie_file=self.cookie_file, codec=codec)
             thread.row_index = row
             thread.progress_signal.connect(self.update_progress)
             thread.finished_signal.connect(self.download_finished)
@@ -446,7 +489,7 @@ class MainWindow(QMainWindow):
         row = sender_thread.row_index
         status = data.get('status', '')
 
-        title_item = self.table.item(row, 0)
+        title_item = self.table.item(row, 1)
         if title_item:
             title = data.get('title', '')
             if title and title != 'Đang kết nối...':
@@ -454,24 +497,24 @@ class MainWindow(QMainWindow):
 
         status_map = {
             'fetching_metadata': ('Đang lấy info', '#888'),
-            'downloading': ('Đang tải', '#1DB954'),
+            'downloading': ('Đang tải', '#BB86FC'),
             'processing': ('FFmpeg...', '#f0a500'),
         }
         text, color = status_map.get(status, (status, '#888'))
-        status_item = self.table.item(row, 1)
+        status_item = self.table.item(row, 2)
         if status_item:
             status_item.setText(text)
             status_item.setForeground(QColor(color))
 
-        progress_bar = self.table.cellWidget(row, 2)
+        progress_bar = self.table.cellWidget(row, 3)
         if progress_bar:
             progress_bar.setValue(int(data.get('percentage', 0)))
 
-        speed_item = self.table.item(row, 3)
+        speed_item = self.table.item(row, 4)
         if speed_item:
             speed_item.setText(data.get('speed', '—'))
 
-        eta_item = self.table.item(row, 4)
+        eta_item = self.table.item(row, 5)
         if eta_item:
             eta_item.setText(data.get('eta', '—'))
 
@@ -481,21 +524,21 @@ class MainWindow(QMainWindow):
             return
         row = sender_thread.row_index
 
-        title_item = self.table.item(row, 0)
+        title_item = self.table.item(row, 1)
         if title_item:
             title_item.setText(f"✅  {title}")
             title_item.setForeground(QColor("#ffffff"))
 
-        status_item = self.table.item(row, 1)
+        status_item = self.table.item(row, 2)
         if status_item:
             status_item.setText("Hoàn tất")
-            status_item.setForeground(QColor("#1DB954"))
+            status_item.setForeground(QColor("#03DAC6"))
 
-        progress_bar = self.table.cellWidget(row, 2)
+        progress_bar = self.table.cellWidget(row, 3)
         if progress_bar:
             progress_bar.setValue(100)
 
-        for col, text in [(3, "Done"), (4, "0s")]:
+        for col, text in [(4, "Done"), (5, "0s")]:
             item = self.table.item(row, col)
             if item:
                 item.setText(text)
@@ -509,16 +552,16 @@ class MainWindow(QMainWindow):
             return
         row = sender_thread.row_index
 
-        title_item = self.table.item(row, 0)
+        title_item = self.table.item(row, 1)
         if title_item:
             title_item.setForeground(QColor("#ff5555"))
 
-        status_item = self.table.item(row, 1)
+        status_item = self.table.item(row, 2)
         if status_item:
             status_item.setText("❌ Lỗi")
             status_item.setForeground(QColor("#ff5555"))
 
-        speed_item = self.table.item(row, 3)
+        speed_item = self.table.item(row, 4)
         if speed_item:
             speed_item.setText(str(error_msg)[:50])
             speed_item.setForeground(QColor("#ff5555"))

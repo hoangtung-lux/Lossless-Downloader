@@ -1,7 +1,7 @@
 @echo off
-title SpotiFLAC Cleaner
+title Lumina Music Cleaner
 echo ==========================================
-echo    DANG DON DEP DU AN SPOTIFLAC...
+echo    DANG DON DEP DU AN Lumina Music...
 echo ==========================================
 
 if exist build rmdir /s /q build
